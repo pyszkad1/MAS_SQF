@@ -1,0 +1,25 @@
+EFG 2 R "" { "p1" "p2" }
+""
+
+c "Deal" 1 "" { "jj" 0.1666666666 "jq" 0.3333333334 "qj" 0.3333333334 "qq" 0.1666666666 } 0
+p "" 1 1 "" { "fold1" "bet" } 0
+t "p1 folded" 1 "" { -1, 1 }
+p "" 2 1 "" { "fold2" "call" } 0
+t "p2 folded" 2 "" { 1, -1 }
+t "tie" 3 "" { 0, 0 }
+p "" 1 1 "" { "fold1" "bet" } 0
+t "p1 folded" 4 "" { -1, 1 }
+p "" 2 2 "" { "fold2" "call" } 0
+t "p2 folded" 5 "" { 1, -1 }
+t "p2 wins" 6 "" { -3, 3 }
+p "" 1 2 "" { "fold1" "bet" } 0
+t "p1 folded" 7 "" { -1, 1 }
+p "" 2 1 "" { "fold2" "call" } 0
+t "p2 folded" 8 "" { 1, -1 }
+t "p1 wins" 9 "" { 3, -3 }
+p "" 1 2 "" { "fold1" "bet" } 0
+t "p1 folded" 10 "" { -1, 1 }
+p "" 2 2 "" { "fold2" "call" } 0
+t "p2 folded" 11 "" { 1, -1 }
+t "tie" 12 "" { 0, 0 }
+

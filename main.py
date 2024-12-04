@@ -1,82 +1,181 @@
 import contextlib
 import pygambit
 import sys
+from cgt_bandits import import_efg
+from cgt_bandits.nodes import ChanceNode, TerminalNode, PersonalNode
 
 import gurobipy as gp
+
 from gurobipy import GRB
 
+def sqf(I, S, seq, g):
+    """
+    Solve the Sequence Form Linear Program (SQF) for the given parameters.
 
-def sqf(I, Sigma, A, seq, g):
-    """The Sequence form linear program defined in terms of the parameters
-    I, Sigma, A, seq, g."""
+    Parameters:
+        I: Information sets for each player.
+        S: Sequences for each player.
+        seq: Function mapping information sets to sequences.
+        g: Payoff matrix.
 
-    # Implement this first. The function should be completely general. Do not
-    # traverse the graph at this point! Simply use the gurobi modeling interface
-    # and formulate the SQF. If you do this correctly, you should be able to
-    # compute the payoff of the miners by switching the parameters.
-
+    Returns:
+        The value of the game for the first player.
+    """
     m = gp.Model("SQF")
+    m.setParam("OutputFlag", 0)  # Suppress solver output
 
     # Decision variables
-    v = m.addVars(I[1], name="v", lb=-GRB.INFINITY, ub=GRB.INFINITY)  # Payoff variables for Player 2
-    r = m.addVars(seq, name="r", lb=0)  # Reach probabilities for Player 1's sequences
+    r = m.addVars(S[0], name="r", lb=0, ub=1)  # Reach probabilities for Player 1
+    v = m.addVars(I[1], name="v", lb=-GRB.INFINITY)  # Payoff variables for Player 2
 
-    # Objective: maximize the payoff for Player 1
-    m.setObjective(g.prod(r), GRB.MAXIMIZE)
+    # Objective function: Maximize Player 1's payoff
+    # for s0 in S[0]:
+    #     print("propability ", float(g.get((s0, ()), ([0.0, 0.0], 1.0))[1]))
+    m.setObjective(
+        gp.quicksum(
+            float(g.get((s0, ()), ([0.0, 0.0], 0.0))[0][0]) *  # Player 1 payoff
+            float(g.get((s0, ()), ([0.0, 0.0], 0.0))[1]) *     # Probability
+            r[s0] for s0 in S[0]
+        ) +
+        gp.quicksum(v[j] for j in I[1] if seq[1][j] == ()),
+        GRB.MAXIMIZE
+    )
 
-    # Constraints
-    # (1) Flow conservation constraints
-    m.addConstr(r[()] == 1, name="Root sequence")  # Root sequence reaches with probability 1
-    for sigma in Sigma[0]:  # Player 1 sequences
-        if sigma not in A[0]:
-            m.addConstr(r[sigma] == gp.quicksum(r[tau] for tau in seq if A[0][tau] == sigma), name=f"Flow-{sigma}")
+    # Payoff constraints for Player 2
+    for i in I[1]:  # Iterate over Player 2's information sets
+        sigma_1 = seq[1][i]  # Get the sequence for information set i
+        actions = I[1][i]  # Get the available actions for information set i
 
-    # (2) Payoff constraints for Player 2
-    for i in I[1]:
-        m.addConstr(v[i] >= gp.quicksum(g[(sigma, i)] * r[sigma] for sigma in seq), name=f"Payoff-{i}")
+        for a in actions:  # Iterate over actions in A_1(i)
+            sigma_1_a = sigma_1 + (a,)  # Extend sequence by action a
 
+            # Calculate payoff sum for Player 2
+            # for s0 in S[0]:
+            #     print("propability ", float(g.get((s0, sigma_1_a), ([0.0, 0.0], 1.0))[1]))
+            payoff_sum = gp.quicksum(
+                float(g.get((s0, sigma_1_a), ([0.0, 0.0], 0.0))[0][1]) *  # Player 2 payoff
+                float(g.get((s0, sigma_1_a), ([0.0, 0.0], 0.0))[1]) *     # Probability
+                r[s0] for s0 in S[0]
+            )
+
+            # Calculate continuation value for Player 2
+            continue_value = gp.quicksum(v[j] for j in I[1] if seq[1][j] == sigma_1_a)
+
+            # Add the payoff constraint
+            m.addConstr(
+                continue_value + payoff_sum >= v[i],
+                name=f"Payoff-{i}-{a}"
+            )
+
+    # Flow conservation constraints for Player 1
+    for i in I[0]:  # Iterate over Player 1's information sets
+        sigma_0 = seq[0][i]
+        actions = I[0][i]
+        m.addConstr(
+            gp.quicksum(r[sigma_0 + (a,)] for a in actions) == r[sigma_0],
+            name=f"Flow-{i}"
+        )
+
+    # Root sequence constraint
+    m.addConstr(r[()] == 1, name="RootSequence")
+
+    # Optimize the model
     m.optimize()
 
     return m.ObjVal
 
 
+
 def extract_parameters(efg):
-    """Converts an extensive form game into the SQF parameters:
-    I, Sigma, A, seq, g."""
+    """
+    Extract the Sequence Form Linear Program (SQF) parameters from a parsed
+    game tree (efg root), with action labels including indices.
 
-    # Implement this second. It does not matter how you implement the
-    # parameters -- functions, classes, or dictionaries, anything will work.
+    Parameters:
+        efg: The root node of the game tree after parsing with pygambit.
 
-    I = [[], []]  # Information sets for Player 1 and Player 2
-    Sigma = [set(), set()]  # Sequence sets for Player 1 and Player 2
-    A = [{}, {}]  # Maps sequences to available actions
-    seq = set()  # All sequences
-    g = {}  # Payoff matrix mapping (sequence, information set) to payoffs
+    Returns:
+        I: A dictionary for each player where keys are information sets,
+           and values are lists of available actions in those sets.
+        S: Sequences for each player.
+        seq: A dictionary where seq[0][i] maps Player 0's information set to its sequence,
+             and seq[1][i] maps Player 1's information set to its sequence.
+        g: Payoff matrix at terminal nodes with labeled actions.
+    """
+    from collections import defaultdict
 
-    for player in range(2):
-        I[player] = [infoset for infoset in efg.players[player].infosets]
-        Sigma[player] = {seq for seq in efg.players[player].sequences}
+    I = {0: {}, 1: {}}  # Information sets and available actions for each player
+    S = defaultdict(set)  # Sequences per player
+    g = {}  # Payoff matrix (sequence-pair to terminal payoffs)
+    seq = {0: {}, 1: {}}  # Separate mappings for each player's info sets to sequences
 
-        for infoset in I[player]:
-            for action in infoset.actions:
-                parent_seq = infoset.sequence
-                child_seq = parent_seq + (action,)
-                A[player][parent_seq] = action
-                seq.add(child_seq)
+    def label_action(action, infoset):
+        """Generate a labeled action with its player and index."""
+        return f"{action}_{infoset}"
 
-    for sigma in Sigma[0]:
-        for infoset in I[1]:
-            g[(sigma, infoset)] = efg.utility(sigma, infoset)  # Get the utility of a sequence-infoset pair
+    def traverse(node, sequences, probability=1):
+        """
+        Recursive function to traverse the game tree and extract parameters.
+        """
+        if isinstance(node, ChanceNode):
+            # Chance node: propagate to children
+            for prob, child in zip(node.action_probs, node.children):
+                traverse(child, sequences, probability * prob)
 
-    return I, Sigma, A, seq, g
+        elif isinstance(node, PersonalNode):
+            # Personal node: record information sets and sequences
+            player = node.player
+            infoset = node.infoset
+            actions = node.action_names
+
+            # Map infoset to sequence for the current player
+            current_sequence = sequences[player]
+            seq[player][infoset] = current_sequence
+
+            # Add available actions for this infoset
+            if infoset not in I[player]:
+                I[player][infoset] = [label_action(action, infoset) for action in actions]
+
+            # Generate labeled actions
+            labeled_actions = I[player][infoset]
+
+            # Traverse children with updated sequences
+            for labeled_action, child in zip(labeled_actions, node.children):
+                sequences[player] = current_sequence + (labeled_action,)
+                S[player].add(sequences[player])
+
+                traverse(child, sequences, probability)
+            # Restore sequence after recursion
+            sequences[player] = current_sequence
+
+        elif isinstance(node, TerminalNode):
+            # Terminal node: record payoffs with probabilities
+            sequence_pair = tuple(sequences[p] for p in range(len(sequences)))
+            g[sequence_pair] = tuple((node.payoffs, probability))
+
+    # Initialize traversal
+    initial_sequences = {0: (), 1: ()}
+    S[0].add(())
+    S[1].add(())
+    traverse(efg, initial_sequences)
+
+    # Debug prints for verification
+    # print("I[0]: ", I[0])
+    # print("I[1]: ", I[1])
+    # print("S[0]: ", S[0])
+    # print("S[1]: ", S[1])
+    # print("seq[0]: ", seq[0])
+    # print("seq[1]: ", seq[1])
+    # print("g: ", g)
+
+    return I, S, seq, g
 
 
 def payoff(efg):
     """Computes the value of the extensive form game"""
-
-    I, Sigma, A, seq, g = extract_parameters(efg)
+    I, Sigma, seq, g = extract_parameters(efg)
     with contextlib.redirect_stdout(sys.stderr):
-        p = sqf(I, Sigma, A, seq, g)
+        p = sqf(I, Sigma, seq, g)
 
     return p
 

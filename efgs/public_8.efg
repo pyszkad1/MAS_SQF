@@ -1,0 +1,39 @@
+EFG 2 R "" { "0" "1" }
+""
+
+p "root" 2 1 "1-1" { "B0" "B1" } 0
+p "(2,2)" 1 1 "0-7" { "RIGHT" } 0
+p "(2,3)" 1 2 "0-6" { "UP" "RIGHT" } 0
+p "(1,3)" 2 2 "1-3" { "FIGHT" "SNEAK" } 0
+c "FIGHT" 1 "" { "ESCAPED" 1/2 "CAUGHT" 1/2 } 0
+t "NO ACTION 1,3" 1 "" { 0, 0 }
+t "CAUGHT" 2 "" { 0, 0 }
+p "SNEAK" 2 3 "1-2" { "B1" } 0
+t "NO ACTION 1,3" 3 "" { 0, 0 }
+p "(2,4)" 1 3 "0-5" { "DOWN" "RIGHT" } 0
+t "NO ACTION 3,4" 4 "" { 0, 0 }
+p "(2,5)" 1 4 "0-4" { "RIGHT" } 0
+t "DESTINATION" 5 "" { 2, -2 }
+p "(2,2)" 1 1 "0-7" { "RIGHT" } 0
+p "(2,3)" 2 4 "1-14" { "FIGHT" "SNEAK" } 0
+c "FIGHT" 2 "" { "ESCAPED" 1/2 "CAUGHT" 1/2 } 0
+p "(2,3)" 1 5 "0-10" { "UP" "RIGHT" } 0
+t "NO ACTION 1,3" 6 "" { 0, 0 }
+p "(2,4)" 1 6 "0-9" { "DOWN" "RIGHT" } 0
+t "NO ACTION 3,4" 7 "" { 0, 0 }
+p "(2,5)" 1 7 "0-8" { "RIGHT" } 0
+t "DESTINATION" 8 "" { 2, -2 }
+t "CAUGHT" 9 "" { 0, 0 }
+p "SNEAK" 2 5 "1-13" { "B0" } 0
+p "(2,3)" 1 2 "0-6" { "UP" "RIGHT" } 0
+p "(1,3)" 2 6 "1-12" { "FIGHT" "SNEAK" } 0
+c "FIGHT" 3 "" { "ESCAPED" 1/4 "CAUGHT" 3/4 } 0
+t "NO ACTION 1,3" 10 "" { 0, 0 }
+t "CAUGHT" 11 "" { 0, 0 }
+p "SNEAK" 2 7 "1-11" { "B1" } 0
+t "NO ACTION 1,3" 12 "" { 0, 0 }
+p "(2,4)" 1 3 "0-5" { "DOWN" "RIGHT" } 0
+t "NO ACTION 3,4" 13 "" { 0, 0 }
+p "(2,5)" 1 4 "0-4" { "RIGHT" } 0
+t "DESTINATION" 14 "" { 2, -2 }
+

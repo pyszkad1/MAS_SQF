@@ -32,8 +32,6 @@ def sqf(I, S, seq, g):
     m.addConstr(r[()] == 1, name="RootSequence")
 
     # Objective function: Maximize Player 1's payoff
-    # for s0 in S[0]:
-    #     print("propability ", float(g.get((s0, ()), ([0.0, 0.0], 1.0))[1]))
     m.setObjective(
         gp.quicksum(
             float(g.get((s0, ()), ([0.0, 0.0], 0.0))[0][0]) *  # Player 1 payoff
@@ -52,11 +50,8 @@ def sqf(I, S, seq, g):
         for a in actions:  # Iterate over actions in A_1(i)
             sigma_1_a = sigma_1 + (a,)  # Extend sequence by action a
 
-            # Calculate payoff sum for Player 2
-            # for s0 in S[0]:
-            #     print("propability ", float(g.get((s0, sigma_1_a), ([0.0, 0.0], 1.0))[1]))
             payoff_sum = gp.quicksum(
-                float(g.get((s0, sigma_1_a), ([0.0, 0.0], 0.0))[0][0]) *  # Player 2 payoff
+                float(g.get((s0, sigma_1_a), ([0.0, 0.0], 0.0))[0][0]) *  # Player 1 payoff for some reason!
                 float(g.get((s0, sigma_1_a), ([0.0, 0.0], 0.0))[1]) *     # Probability
                 r[s0] for s0 in S[0]
             )

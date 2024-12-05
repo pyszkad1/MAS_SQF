@@ -1,0 +1,45 @@
+EFG 2 R "" { "0" "1" }
+""
+
+p "root" 2 1 "1-1" { "B0" } 0
+p "(3,2)" 1 1 "0-20" { "UP" "LEFT" "RIGHT" } 0
+p "(2,2)" 2 2 "1-7" { "FIGHT" } 0
+c "FIGHT" 1 "" { "ESCAPED" 1/2 "CAUGHT" 1/2 } 0
+p "(2,2)" 1 2 "0-6" { "UP" "LEFT" "RIGHT" } 0
+t "DESTINATION" 1 "" { 2, -2 }
+p "(2,1)" 1 3 "0-3" { "UP" "DOWN" } 0
+p "(1,1)" 1 4 "0-2" { "RIGHT" } 0
+t "DESTINATION" 2 "" { 2, -2 }
+t "NO ACTION 3,1" 3 "" { 0, 0 }
+p "(2,3)" 1 5 "0-5" { "UP" "DOWN" } 0
+p "(1,3)" 1 6 "0-4" { "LEFT" } 0
+t "DESTINATION" 4 "" { 2, -2 }
+t "NO ACTION 3,3" 5 "" { 0, 0 }
+t "CAUGHT" 6 "" { 0, 0 }
+p "(3,1)" 1 7 "0-13" { "UP" } 0
+p "(2,1)" 1 8 "0-12" { "UP" "RIGHT" } 0
+p "(1,1)" 1 9 "0-8" { "RIGHT" } 0
+t "DESTINATION" 7 "" { 2, -2 }
+p "(2,2)" 2 2 "1-7" { "FIGHT" } 0
+c "FIGHT" 2 "" { "ESCAPED" 1/2 "CAUGHT" 1/2 } 0
+p "(2,2)" 1 10 "0-11" { "UP" "RIGHT" } 0
+t "DESTINATION" 8 "" { 2, -2 }
+p "(2,3)" 1 11 "0-10" { "UP" "DOWN" } 0
+p "(1,3)" 1 12 "0-9" { "LEFT" } 0
+t "DESTINATION" 9 "" { 2, -2 }
+t "NO ACTION 3,3" 10 "" { 0, 0 }
+t "CAUGHT" 11 "" { 0, 0 }
+p "(3,3)" 1 13 "0-19" { "UP" } 0
+p "(2,3)" 1 14 "0-18" { "UP" "LEFT" } 0
+p "(1,3)" 1 15 "0-14" { "LEFT" } 0
+t "DESTINATION" 12 "" { 2, -2 }
+p "(2,2)" 2 2 "1-7" { "FIGHT" } 0
+c "FIGHT" 3 "" { "ESCAPED" 1/2 "CAUGHT" 1/2 } 0
+p "(2,2)" 1 16 "0-17" { "UP" "LEFT" } 0
+t "DESTINATION" 13 "" { 2, -2 }
+p "(2,1)" 1 17 "0-16" { "UP" "DOWN" } 0
+p "(1,1)" 1 18 "0-15" { "RIGHT" } 0
+t "DESTINATION" 14 "" { 2, -2 }
+t "NO ACTION 3,1" 15 "" { 0, 0 }
+t "CAUGHT" 16 "" { 0, 0 }
+

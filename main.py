@@ -28,6 +28,9 @@ def sqf(I, S, seq, g):
     r = m.addVars(S[0], name="r", lb=0, ub=1)  # Reach probabilities for Player 1
     v = m.addVars(I[1], name="v", lb=-GRB.INFINITY)  # Payoff variables for Player 2
 
+    # Initial sequence probability constraint
+    m.addConstr(r[()] == 1, name="RootSequence")
+
     # Objective function: Maximize Player 1's payoff
     # for s0 in S[0]:
     #     print("propability ", float(g.get((s0, ()), ([0.0, 0.0], 1.0))[1]))
@@ -53,7 +56,7 @@ def sqf(I, S, seq, g):
             # for s0 in S[0]:
             #     print("propability ", float(g.get((s0, sigma_1_a), ([0.0, 0.0], 1.0))[1]))
             payoff_sum = gp.quicksum(
-                float(g.get((s0, sigma_1_a), ([0.0, 0.0], 0.0))[0][1]) *  # Player 2 payoff
+                float(g.get((s0, sigma_1_a), ([0.0, 0.0], 0.0))[0][0]) *  # Player 2 payoff
                 float(g.get((s0, sigma_1_a), ([0.0, 0.0], 0.0))[1]) *     # Probability
                 r[s0] for s0 in S[0]
             )
@@ -76,8 +79,43 @@ def sqf(I, S, seq, g):
             name=f"Flow-{i}"
         )
 
-    # Root sequence constraint
-    m.addConstr(r[()] == 1, name="RootSequence")
+    m.update()
+
+    # print("CONSTRAINTS:")
+    # for constr in m.getConstrs():
+    #     lhs_expr = m.getRow(constr)  # Get the linear expression (left-hand side) of the constraint
+    #     rhs_value = constr.RHS           # Right-hand side value of the constraint
+    #     sense = constr.Sense             # Constraint sense (<=, >=, =)
+    #
+    #     # Convert sense code to human-readable format
+    #     if sense == gp.GRB.LESS_EQUAL:
+    #         sense_str = "≤"
+    #     elif sense == gp.GRB.GREATER_EQUAL:
+    #         sense_str = "≥"
+    #     elif sense == gp.GRB.EQUAL:
+    #         sense_str = "="
+    #
+    #     # Build the left-hand side expression as a readable string
+    #     lhs_terms = []
+    #     for j in range(lhs_expr.size()):
+    #         coeff = lhs_expr.getCoeff(j)
+    #         var = lhs_expr.getVar(j)
+    #
+    #         # Formatting coefficient and variable
+    #         if coeff == 1:  # Skip printing "1 *"
+    #             term_str = f"{var.VarName}"
+    #         elif coeff == -1:  # Handle "-1 *" as just "-"
+    #             term_str = f"- {var.VarName}"
+    #         else:
+    #             term_str = f"{coeff} * {var.VarName}" if coeff > 0 else f"- {-coeff} * {var.VarName}"
+    #
+    #         lhs_terms.append(term_str)
+    #
+    #     # Combine terms with proper spacing for a clean look
+    #     lhs_str = " + ".join(lhs_terms).replace("+ -", "- ")
+    #
+    #     # Print the complete constraint in a clear format
+    #     print(f"{constr.ConstrName}: {lhs_str} {sense_str} {rhs_value}")
 
     # Optimize the model
     m.optimize()
